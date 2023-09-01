@@ -28,12 +28,7 @@ class SessionLoggingServiceImpl implements SessionLoggingService {
     }
 
     @Override
-    public void sessionDeleted(@Nonnull SessionId sessionId) {
-        repository.save(new SessionLogEntry(clock.instant(), sessionId, SessionLogEntryType.DESTROYED_DELETED));
-    }
-
-    @Override
-    public void sessionExpired(@Nonnull SessionId sessionId) {
-        repository.save(new SessionLogEntry(clock.instant(), sessionId, SessionLogEntryType.DESTROYED_EXPIRED));
+    public void sessionIdChanged(@Nonnull SessionId oldSessionId, @Nonnull SessionId newSessionId) {
+        repository.save(new SessionLogEntry(clock.instant(), newSessionId, oldSessionId, SessionLogEntryType.SESSION_ID_CHANGED));
     }
 }

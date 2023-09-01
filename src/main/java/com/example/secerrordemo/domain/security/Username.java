@@ -6,37 +6,25 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class Username implements Serializable {
+public sealed abstract class Username implements Serializable permits Username.ValidUsername, Username.InvalidUsername {
 
     public static final int MIN_LENGTH = 3;
     public static final int MAX_LENGTH = 100;
 
-    private final String username;
+    protected final String username;
 
     private Username(@Nonnull String username) {
         this.username = username;
     }
 
+    public abstract boolean isValid();
+
     public static @Nonnull Username fromString(@Nonnull String username) {
-        return new Username(validate(username));
+        return isValid(username) ? new ValidUsername(username) : new InvalidUsername(username);
     }
 
-    private static @Nonnull String validate(@Nonnull String username) {
-        if (username.length() < MIN_LENGTH) {
-            throw new IllegalArgumentException("Username is too short");
-        }
-        if (username.length() > MAX_LENGTH) {
-            throw new IllegalArgumentException("Username is too long");
-        }
-        if (!StringUtils.isAlphanumeric(username)) {
-            throw new IllegalArgumentException("Username must be alphanumeric");
-        }
-        return username;
-    }
-
-    @Override
-    public String toString() {
-        return username;
+    private static boolean isValid(@Nonnull String username) {
+        return username.length() >= MIN_LENGTH && username.length() <= MAX_LENGTH && StringUtils.isAlphanumeric(username);
     }
 
     @Override
@@ -50,5 +38,39 @@ public final class Username implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(username);
+    }
+
+    public static final class ValidUsername extends Username {
+
+        private ValidUsername(@Nonnull String username) {
+            super(username);
+        }
+
+        @Override
+        public boolean isValid() {
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return username;
+        }
+    }
+
+    public static final class InvalidUsername extends Username {
+
+        private InvalidUsername(@Nonnull String username) {
+            super(username);
+        }
+
+        @Override
+        public boolean isValid() {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "[INVALID USERNAME]";
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.secerrordemo.ui;
 
 import com.example.secerrordemo.app.security.CurrentUser;
+import com.example.secerrordemo.infra.security.Roles;
 import com.example.secerrordemo.ui.io.SerializableBean;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -21,6 +22,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 public class MainLayout extends AppLayout {
 
     private final SerializableBean<AuthenticationContext> authenticationContext = SerializableBean.ofType(AuthenticationContext.class);
+    @SuppressWarnings("FieldCanBeLocal")
     private final SerializableBean<CurrentUser> currentUser = SerializableBean.ofType(CurrentUser.class);
 
     public MainLayout() {
@@ -49,7 +51,7 @@ public class MainLayout extends AppLayout {
 
         userMenu.addItem("Change Password", evt -> getUI().ifPresent(ui -> ui.navigate(ChangePasswordView.class)));
         userMenu.add(new Hr());
-        userMenu.addItem("Logout", evt -> authenticationContext.get().logout()); // TODO Logout does not work!
+        userMenu.addItem("Logout", evt -> authenticationContext.get().logout());
 
         header.add(menuBar);
 
@@ -57,7 +59,9 @@ public class MainLayout extends AppLayout {
 
         var nav = new SideNav();
         nav.addItem(new SideNavItem("Main View", MainView.class));
-        nav.addItem(new SideNavItem("Admin View", AdminView.class));
+        if (currentUser.get().hasAuthority(Roles.ROLE_ADMIN)) {
+            nav.addItem(new SideNavItem("Admin View", AdminView.class));
+        }
         addToDrawer(nav);
     }
 }

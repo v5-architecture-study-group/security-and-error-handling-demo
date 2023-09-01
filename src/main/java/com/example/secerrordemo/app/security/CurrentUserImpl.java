@@ -33,6 +33,7 @@ class CurrentUserImpl implements CurrentUser {
     @Override
     public Username username() {
         return Optional.ofNullable(getAuthentication())
+                .filter(Authentication::isAuthenticated)
                 .map(Authentication::getName)
                 .map(Username::fromString)
                 .orElseThrow(() -> new AccessDeniedException("No current user"));
@@ -56,6 +57,13 @@ class CurrentUserImpl implements CurrentUser {
     @Override
     public IpAddress ipAddress() {
         return WebAuthenticationDetailsUtils.extractIpAddress(getAuthentication());
+    }
+
+    @Override
+    public boolean hasAuthority(@Nonnull String authority) {
+        return Optional.ofNullable(getAuthentication())
+                .map(auth -> auth.getAuthorities().stream().anyMatch(ga -> ga.getAuthority().equals(authority)))
+                .orElse(false);
     }
 
     private @Nullable Authentication getAuthentication() {

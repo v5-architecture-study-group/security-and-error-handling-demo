@@ -9,7 +9,5 @@ public interface SessionLoggingService {
 
     void sessionDestroyed(@Nonnull SessionId sessionId);
 
-    void sessionDeleted(@Nonnull SessionId sessionId);
-
-    void sessionExpired(@Nonnull SessionId sessionId);
+    void sessionIdChanged(@Nonnull SessionId oldSessionId, @Nonnull SessionId newSessionId);
 }

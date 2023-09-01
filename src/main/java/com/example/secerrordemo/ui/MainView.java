@@ -1,6 +1,6 @@
 package com.example.secerrordemo.ui;
 
-import com.example.secerrordemo.domain.security.Roles;
+import com.example.secerrordemo.infra.security.Roles;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -16,6 +16,5 @@ public class MainView extends VerticalLayout {
         add(new Button("Throw an unhandled exception", event -> {
             throw new IllegalStateException("This is an unhandled exception!");
         }));
-        // TODO Add error handler
     }
 }

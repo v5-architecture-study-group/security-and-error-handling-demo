@@ -29,10 +29,13 @@ class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return txManager.callInNewTransaction(() -> userAccountRepository
-                .findByUsername(Username.fromString(username))
+        var un = Username.fromString(username);
+        if (!un.isValid()) {
+            throw new UsernameNotFoundException("Invalid username");
+        }
+        return txManager.callInNewTransaction(() -> userAccountRepository.findByUsername(un))
                 .map(this::createUser)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found")));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     private @Nonnull User createUser(@Nonnull UserAccount userAccount) {

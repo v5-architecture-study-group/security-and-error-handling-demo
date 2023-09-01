@@ -21,4 +21,6 @@ public interface CurrentUser {
 
     @Nonnull
     IpAddress ipAddress();
+
+    boolean hasAuthority(@Nonnull String authority);
 }

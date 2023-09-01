@@ -1,5 +1,6 @@
 package com.example.secerrordemo.domain.security;
 
+import com.example.secerrordemo.infra.security.Roles;
 import jakarta.annotation.Nonnull;
 
 import java.util.List;

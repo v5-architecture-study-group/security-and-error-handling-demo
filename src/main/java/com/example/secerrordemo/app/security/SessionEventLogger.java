@@ -3,11 +3,13 @@ package com.example.secerrordemo.app.security;
 import com.example.secerrordemo.domain.security.SessionId;
 import com.example.secerrordemo.domain.security.log.SessionLoggingService;
 import com.example.secerrordemo.infra.tx.TxManager;
+import jakarta.annotation.Nonnull;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.event.EventListener;
-import org.springframework.session.events.SessionCreatedEvent;
-import org.springframework.session.events.SessionDeletedEvent;
-import org.springframework.session.events.SessionDestroyedEvent;
-import org.springframework.session.events.SessionExpiredEvent;
+import org.springframework.security.core.session.AbstractSessionEvent;
+import org.springframework.security.core.session.SessionCreationEvent;
+import org.springframework.security.core.session.SessionDestroyedEvent;
+import org.springframework.security.core.session.SessionIdChangedEvent;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,19 +24,23 @@ class SessionEventLogger {
     }
 
     @EventListener
-    public void onSessionCreated(SessionCreatedEvent sessionCreatedEvent) {
-        txManager.runInNewTransaction(() -> sessionLoggingService.sessionCreated(SessionId.fromString(sessionCreatedEvent.getSessionId())));
+    public void onSessionCreation(SessionCreationEvent sessionCreatedEvent) {
+        txManager.runInNewTransaction(() -> sessionLoggingService.sessionCreated(extractSessionId(sessionCreatedEvent)));
     }
 
     @EventListener
     public void onSessionDestroyed(SessionDestroyedEvent sessionDestroyedEvent) {
-        var sessionId = SessionId.fromString(sessionDestroyedEvent.getSessionId());
-        if (sessionDestroyedEvent instanceof SessionDeletedEvent) {
-            txManager.runInNewTransaction(() -> sessionLoggingService.sessionDeleted(sessionId));
-        } else if (sessionDestroyedEvent instanceof SessionExpiredEvent) {
-            txManager.runInNewTransaction(() -> sessionLoggingService.sessionExpired(sessionId));
-        } else {
-            txManager.runInNewTransaction(() -> sessionLoggingService.sessionDestroyed(sessionId));
-        }
+        txManager.runInNewTransaction(() -> sessionLoggingService.sessionDestroyed(extractSessionId(sessionDestroyedEvent)));
+    }
+
+    @EventListener
+    public void onSessionIdChanged(SessionIdChangedEvent sessionIdChangedEvent) {
+        txManager.runInNewTransaction(() -> sessionLoggingService.sessionIdChanged(
+                SessionId.fromString(sessionIdChangedEvent.getOldSessionId()),
+                SessionId.fromString(sessionIdChangedEvent.getNewSessionId())));
+    }
+
+    private @Nonnull SessionId extractSessionId(@Nonnull AbstractSessionEvent event) {
+        return SessionId.fromString(((HttpSession) event.getSource()).getId());
     }
 }
