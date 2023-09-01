@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  hazelcast-0:
+    image: hazelcast/hazelcast:latest
+    environment:
+      - HZ_CLUSTERNAME=demo-cluster
+
+  hazelcast-1:
+    image: hazelcast/hazelcast:latest
+    environment:
+      - HZ_CLUSTERNAME=demo-cluster
+
+  app-0:
+    image: security-and-error-handling-demo-app
+    build: .
+    environment:
+      - PORT=8080
+      - HZ_CLUSTERNAME=demo-cluster
+      - HZ_ADDRESS_0=hazelcast-0
+      - HZ_ADDRESS_1=hazelcast-1
+    ports:
+      - "8080:8080"
+
+  app-1:
+    image: security-and-error-handling-demo-app
+    build: .
+    environment:
+      - PORT=8080
+      - HZ_CLUSTERNAME=demo-cluster
+      - HZ_ADDRESS_0=hazelcast-0
+      - HZ_ADDRESS_1=hazelcast-1
