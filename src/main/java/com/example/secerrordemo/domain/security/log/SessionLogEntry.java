@@ -11,18 +11,19 @@ import java.time.Instant;
 import java.util.Objects;
 
 @Entity
+@Table(name = "session_log")
 class SessionLogEntry extends AbstractPersistable<Long> {
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "ts")
     private Instant timestamp;
-    @Column(nullable = false, length = SessionId.MAX_LENGTH)
+    @Column(nullable = false, length = SessionId.MAX_LENGTH, name = "session_id")
     @Convert(converter = SessionIdAttributeConverter.class)
     private SessionId sessionId;
-    @Column(nullable = true, length = SessionId.MAX_LENGTH)
+    @Column(nullable = true, length = SessionId.MAX_LENGTH, name = "old_session_id")
     @Convert(converter = SessionIdAttributeConverter.class)
     private SessionId oldSessionId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100, name = "entry_type")
     @Enumerated(EnumType.STRING)
     private SessionLogEntryType entryType;
 

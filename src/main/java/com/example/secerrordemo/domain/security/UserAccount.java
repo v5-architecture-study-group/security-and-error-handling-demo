@@ -13,37 +13,38 @@ import java.util.Optional;
 
 
 @Entity
+@Table(name = "user_account")
 public class UserAccount extends AbstractPersistable<Long> {
 
     public static final int MAX_FAILED_ATTEMPTS = 3;
     public static final Duration CREDENTIALS_VALID_FOR = Duration.ofDays(60);
 
-    @Column(unique = true, nullable = false, length = Username.MAX_LENGTH)
+    @Column(unique = true, nullable = false, length = Username.MAX_LENGTH, name = "username")
     @Convert(converter = UsernameAttributeConverter.class)
     private Username username;
 
-    @Column(nullable = false, length = ReadOnceEncodedPassword.MAX_LENGTH)
+    @Column(nullable = false, length = ReadOnceEncodedPassword.MAX_LENGTH, name = "encoded_password")
     private String encodedPassword;
     // Because of Hibernate, we can't use ReadOnceEncodedPassword with an AttributeConverter.
     // Within a single write-operation, Hibernate would read the value more than once, causing an error.
     private transient ReadOnceEncodedPassword readOnceEncodedPassword;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "not_valid_before")
     private Instant accountNotValidBefore;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "not_valid_after")
     private Instant accountNotValidAfter;
 
-    @Column
+    @Column(name = "password_not_valid_after")
     private Instant passwordNotValidAfter;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "enabled")
     private boolean enabled;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "failed_login_attempts")
     private int failedLoginAttempts;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "user_type", length = 100)
     @Enumerated(EnumType.STRING)
     private UserType userType;
 

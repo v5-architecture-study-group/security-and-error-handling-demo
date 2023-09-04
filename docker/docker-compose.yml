@@ -1,33 +1,67 @@
 version: "3.9"
+name: "security-and-error-handling-demo"
 services:
   hazelcast-0:
     image: hazelcast/hazelcast:latest
+    restart: always
     environment:
       - HZ_CLUSTERNAME=demo-cluster
 
   hazelcast-1:
     image: hazelcast/hazelcast:latest
+    restart: always
     environment:
       - HZ_CLUSTERNAME=demo-cluster
+
+  db:
+    image: mariadb:latest
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=2smart4u
+      - MARIADB_USER=appuser
+      - MARIADB_PASSWORD=password123
+      - MARIADB_DATABASE=appdb
+    volumes:
+      - datadir:/var/lib/mysql
+
+  adminer:
+    image: adminer:latest
+    restart: always
+    ports:
+      - "9001:8080"
 
   app-0:
     image: security-and-error-handling-demo/app
     build: ..
+    restart: always
     environment:
       - PORT=8080
       - HZ_CLUSTERNAME=demo-cluster
       - HZ_ADDRESSES=hazelcast-0,hazelcast-1
+      - DATABASE_URL=jdbc:mariadb://db/appdb?user=appuser&password=password123&connectTimeout=5000
+    depends_on:
+      - db
+      - hazelcast-0
 
   app-1:
     image: security-and-error-handling-demo/app
     build: ..
+    restart: always
     environment:
       - PORT=8080
       - HZ_CLUSTERNAME=demo-cluster
       - HZ_ADDRESSES=hazelcast-0,hazelcast-1
+      - DATABASE_URL=jdbc:mariadb://db/appdb?user=appuser&password=password123&connectTimeout=5000
+    depends_on:
+      - db
+      - hazelcast-0
 
   gateway:
     image: security-and-error-handling-demo/gateway
     build: loadbalancer
+    restart: always
     ports:
       - "9000:9000"
+
+volumes:
+  datadir:
