@@ -1,5 +1,6 @@
 package com.example.secerrordemo.infra.session.hazelcast;
 
+import com.example.secerrordemo.infra.session.SessionKey;
 import com.example.secerrordemo.infra.session.SessionStore;
 import com.hazelcast.map.IMap;
 import jakarta.annotation.Nonnull;
@@ -20,31 +21,36 @@ class HazelcastSessionStore implements SessionStore {
     }
 
     @Override
-    public void save(@Nonnull String sessionId, @Nonnull SessionSaveJob saveJob) {
-        log.debug("Saving session {} to shared cache", sessionId);
-        this.sessions.lock(sessionId);
+    public void save(@Nonnull SessionKey sessionKey, @Nonnull SessionSaveJob saveJob) {
+        log.trace("Saving session {} to shared cache", sessionKey);
+        this.sessions.lock(sessionKey.toString());
         try (var bos = new ByteArrayOutputStream(); var oos = new ObjectOutputStream(bos)) {
             saveJob.writeAttributes((attributeName, attributeValue) -> {
                 try {
                     oos.writeObject(new Attribute(attributeName, attributeValue));
                 } catch (IOException ex) {
-                    log.error("Could not write attribute " + attributeName + " to session " + sessionId, ex);
+                    log.warn("Could not write attribute " + attributeName + " to session " + sessionKey, ex);
                 }
             });
             oos.writeObject(null); // Terminator
-            sessions.set(sessionId, bos.toByteArray());
+            sessions.set(sessionKey.toString(), bos.toByteArray());
         } catch (Exception ex) {
-            log.error("Could not save session " + sessionId, ex);
+            log.warn("Could not save session " + sessionKey, ex);
         } finally {
-            this.sessions.unlock(sessionId);
+            this.sessions.unlock(sessionKey.toString());
         }
     }
 
     @Override
-    public void load(@Nonnull String sessionId, @Nonnull SessionAttributeSink sink) {
-        var data = sessions.get(sessionId);
-        if (data != null) {
-            log.debug("Loading session {} from shared cache", sessionId);
+    public void load(@Nonnull SessionKey sessionKey, @Nonnull SessionAttributeSink sink) {
+        this.sessions.lock(sessionKey.toString());
+        try {
+            var data = sessions.get(sessionKey.toString());
+            if (data == null) {
+                log.trace("Session {} did not exist in shared cache", sessionKey);
+                return;
+            }
+            log.trace("Loading session {} from shared cache", sessionKey);
             try (var bis = new ByteArrayInputStream(data); var ois = new ObjectInputStream(bis)) {
                 var o = ois.readObject();
                 while (o instanceof Attribute a) {
@@ -52,17 +58,17 @@ class HazelcastSessionStore implements SessionStore {
                     o = ois.readObject();
                 }
             } catch (Exception ex) {
-                log.error("Could not load session " + sessionId, ex);
+                log.warn("Could not load session " + sessionKey, ex);
             }
-        } else {
-            log.debug("Session {} did not exist in shared cache", sessionId);
+        } finally {
+            this.sessions.unlock(sessionKey.toString());
         }
     }
 
     @Override
-    public void delete(@Nonnull String sessionId) {
-        log.debug("Deleting session {} from shared cache", sessionId);
-        sessions.delete(sessionId);
+    public void delete(@Nonnull SessionKey sessionKey) {
+        log.trace("Deleting session {} from shared cache", sessionKey);
+        sessions.delete(sessionKey.toString());
     }
 
     record Attribute(@Nonnull String name, @Nullable Object value) implements Serializable {

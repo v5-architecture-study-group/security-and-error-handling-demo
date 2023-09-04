@@ -1,5 +1,6 @@
 package com.example.secerrordemo.ui.io;
 
+import com.example.secerrordemo.infra.spring.ApplicationContextHolder;
 import jakarta.annotation.Nonnull;
 
 import java.io.IOException;

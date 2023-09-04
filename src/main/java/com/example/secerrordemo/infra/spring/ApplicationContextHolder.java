@@ -1,4 +1,4 @@
-package com.example.secerrordemo.ui.io;
+package com.example.secerrordemo.infra.spring;
 
 import jakarta.annotation.Nonnull;
 import org.springframework.beans.BeansException;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
-class ApplicationContextHolder implements ApplicationContextAware {
+public class ApplicationContextHolder implements ApplicationContextAware {
 
     private final static AtomicReference<ApplicationContext> APPLICATION_CONTEXT = new AtomicReference<>();
 
@@ -20,7 +20,7 @@ class ApplicationContextHolder implements ApplicationContextAware {
         }
     }
 
-    static @Nonnull ApplicationContext getApplicationContext() {
+    public static @Nonnull ApplicationContext getApplicationContext() {
         var appContext = APPLICATION_CONTEXT.get();
         if (appContext == null) {
             throw new IllegalStateException("ApplicationContext has not been set yet");

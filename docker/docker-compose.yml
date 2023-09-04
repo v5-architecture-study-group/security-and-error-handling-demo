@@ -11,21 +11,23 @@ services:
       - HZ_CLUSTERNAME=demo-cluster
 
   app-0:
-    image: security-and-error-handling-demo-app
-    build: .
+    image: security-and-error-handling-demo/app
+    build: ..
     environment:
       - PORT=8080
       - HZ_CLUSTERNAME=demo-cluster
-      - HZ_ADDRESS_0=hazelcast-0
-      - HZ_ADDRESS_1=hazelcast-1
-    ports:
-      - "8080:8080"
+      - HZ_ADDRESSES=hazelcast-0,hazelcast-1
 
   app-1:
-    image: security-and-error-handling-demo-app
-    build: .
+    image: security-and-error-handling-demo/app
+    build: ..
     environment:
       - PORT=8080
       - HZ_CLUSTERNAME=demo-cluster
-      - HZ_ADDRESS_0=hazelcast-0
-      - HZ_ADDRESS_1=hazelcast-1
+      - HZ_ADDRESSES=hazelcast-0,hazelcast-1
+
+  gateway:
+    image: security-and-error-handling-demo/gateway
+    build: loadbalancer
+    ports:
+      - "9000:9000"

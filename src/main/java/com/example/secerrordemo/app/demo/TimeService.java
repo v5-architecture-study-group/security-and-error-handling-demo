@@ -37,12 +37,11 @@ public class TimeService {
             subscribers = Set.copyOf(this.subscribers.keySet());
         }
         var now = clock.instant();
-        log.trace("Notifying {} subscribers", subscribers.size());
         subscribers.forEach(subscriber -> {
             try {
                 subscriber.accept(now);
             } catch (Throwable ex) {
-                log.error("Subscriber threw an exception, logging and continuing", ex);
+                log.debug("Subscriber threw an exception, logging and continuing", ex);
             }
         });
     }
@@ -52,9 +51,19 @@ public class TimeService {
         executorService.shutdown();
     }
 
-    public void subscribeToTimeUpdates(@Nonnull Consumer<Instant> subscriber) {
+    public @Nonnull Subscription subscribeToTimeUpdates(@Nonnull Consumer<Instant> subscriber) {
         synchronized (subscribers) {
             subscribers.put(subscriber, null);
         }
+        return () -> {
+            synchronized (subscribers) {
+                subscribers.remove(subscriber);
+            }
+        };
+    }
+
+    @FunctionalInterface
+    public interface Subscription {
+        void unsubscribe();
     }
 }

@@ -5,11 +5,11 @@ import jakarta.annotation.Nullable;
 
 public interface SessionStore {
 
-    void save(@Nonnull String sessionId, @Nonnull SessionSaveJob saveJob);
+    void save(@Nonnull SessionKey sessionKey, @Nonnull SessionSaveJob saveJob);
 
-    void load(@Nonnull String sessionId, @Nonnull SessionAttributeSink sink);
+    void load(@Nonnull SessionKey sessionKey, @Nonnull SessionAttributeSink sink);
 
-    void delete(@Nonnull String sessionId);
+    void delete(@Nonnull SessionKey sessionKey);
 
     @FunctionalInterface
     interface SessionAttributeSink {

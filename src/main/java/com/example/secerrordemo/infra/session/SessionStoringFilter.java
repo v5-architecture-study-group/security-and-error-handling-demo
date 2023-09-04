@@ -1,5 +1,7 @@
 package com.example.secerrordemo.infra.session;
 
+import com.vaadin.flow.server.HandlerHelper;
+import com.vaadin.flow.shared.ApplicationConstants;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,25 +11,36 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-public class SessionStoringFilter extends OncePerRequestFilter {
+class SessionStoringFilter extends OncePerRequestFilter {
 
-    private final SessionStore sessionStore;
+    private final SessionKeyResolver sessionKeyResolver;
+    private final SessionSerde sessionSerde;
 
-    public SessionStoringFilter(@Nonnull SessionStore sessionStore) {
-        this.sessionStore = sessionStore;
+    SessionStoringFilter(@Nonnull SessionKeyResolver sessionKeyResolver, @Nonnull SessionSerde sessionSerde) {
+        this.sessionKeyResolver = sessionKeyResolver;
+        this.sessionSerde = sessionSerde;
     }
 
     @Override
     protected void doFilterInternal(@Nonnull HttpServletRequest request,
                                     @Nonnull HttpServletResponse response,
                                     @Nonnull FilterChain filterChain) throws ServletException, IOException {
+        sessionKeyResolver.setCurrentKey(request);
         try {
             filterChain.doFilter(request, response);
-        } finally {
+            sessionKeyResolver.storeCurrentKey(request, response);
             var session = request.getSession(false);
-            if (session != null) {
-                sessionStore.save(session.getId(), sink -> session.getAttributeNames().asIterator().forEachRemaining(name -> sink.write(name, session.getAttribute(name))));
+            if (session != null && request.isRequestedSessionIdValid() && isUIDLRequest(request)) {
+                sessionSerde.serialize(session);
             }
+        } finally {
+            CurrentKey.setCurrent(null);
         }
+    }
+
+    private boolean isUIDLRequest(@Nonnull HttpServletRequest request) {
+        return HandlerHelper.RequestType.UIDL.getIdentifier()
+                .equals(request.getParameter(
+                        ApplicationConstants.REQUEST_TYPE_PARAMETER));
     }
 }
