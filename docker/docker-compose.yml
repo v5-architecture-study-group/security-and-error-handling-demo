@@ -1,17 +1,13 @@
 version: "3.9"
 name: "security-and-error-handling-demo"
 services:
-  hazelcast-0:
+  hazelcast:
     image: hazelcast/hazelcast:latest
     restart: always
     environment:
       - HZ_CLUSTERNAME=demo-cluster
-
-  hazelcast-1:
-    image: hazelcast/hazelcast:latest
-    restart: always
-    environment:
-      - HZ_CLUSTERNAME=demo-cluster
+    deploy:
+      replicas: 2
 
   db:
     image: mariadb:latest
@@ -37,11 +33,11 @@ services:
     environment:
       - PORT=8080
       - HZ_CLUSTERNAME=demo-cluster
-      - HZ_ADDRESSES=hazelcast-0,hazelcast-1
+      - HZ_ADDRESSES=hazelcast
       - DATABASE_URL=jdbc:mariadb://db/appdb?user=appuser&password=password123&connectTimeout=5000
     depends_on:
       - db
-      - hazelcast-0
+      - hazelcast
 
   app-1:
     image: security-and-error-handling-demo/app
@@ -50,11 +46,11 @@ services:
     environment:
       - PORT=8080
       - HZ_CLUSTERNAME=demo-cluster
-      - HZ_ADDRESSES=hazelcast-0,hazelcast-1
+      - HZ_ADDRESSES=hazelcast
       - DATABASE_URL=jdbc:mariadb://db/appdb?user=appuser&password=password123&connectTimeout=5000
     depends_on:
       - db
-      - hazelcast-0
+      - hazelcast
 
   gateway:
     image: security-and-error-handling-demo/gateway
