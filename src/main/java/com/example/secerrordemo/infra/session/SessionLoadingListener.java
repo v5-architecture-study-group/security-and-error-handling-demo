@@ -23,7 +23,9 @@ class SessionLoadingListener implements HttpSessionListener {
     @Override
     public void sessionCreated(HttpSessionEvent se) {
         log.trace("Session {} created", se.getSession().getId());
-        sessionSerde.deserialize(se.getSession());
+        if (sessionSerde.deserialize(se.getSession())) {
+            log.debug("Session {} successfully deserialized from shared cache", se.getSession().getId());
+        }
     }
 
     @Override

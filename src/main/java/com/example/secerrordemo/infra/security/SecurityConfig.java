@@ -27,7 +27,7 @@ class SecurityConfig extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.sessionManagement(sessionManagement -> {
-            sessionManagement.sessionFixation().newSession();
+            sessionManagement.sessionFixation().changeSessionId();
             sessionManagement.maximumSessions(MAXIMUM_SESSIONS_PER_USER).sessionRegistry(sessionRegistry()).expiredUrl(LoginController.LOGIN_FORM_URL);
         });
         setLoginView(http, LoginController.LOGIN_FORM_URL, LoginController.LOGOUT_SUCCESS_URL);

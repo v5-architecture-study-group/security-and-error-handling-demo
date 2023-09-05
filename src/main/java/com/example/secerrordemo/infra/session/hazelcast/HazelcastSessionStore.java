@@ -42,24 +42,27 @@ class HazelcastSessionStore implements SessionStore {
     }
 
     @Override
-    public void load(@Nonnull SessionKey sessionKey, @Nonnull SessionAttributeSink sink) {
+    public boolean load(@Nonnull SessionKey sessionKey, @Nonnull SessionAttributeSink sink) {
         this.sessions.lock(sessionKey.toString());
         try {
             var data = sessions.get(sessionKey.toString());
             if (data == null) {
                 log.trace("Session {} did not exist in shared cache", sessionKey);
-                return;
+                return false;
             }
             log.trace("Loading session {} from shared cache", sessionKey);
             try (var bis = new ByteArrayInputStream(data); var ois = new ObjectInputStream(bis)) {
                 var o = ois.readObject();
                 while (o instanceof Attribute a) {
+                    log.trace("Loading [{}] = [{}]", a.name(), a.value());
                     sink.write(a.name(), a.value());
                     o = ois.readObject();
                 }
+                return true;
             } catch (Exception ex) {
                 log.warn("Could not load session " + sessionKey, ex);
             }
+            return false;
         } finally {
             this.sessions.unlock(sessionKey.toString());
         }

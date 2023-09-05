@@ -7,7 +7,7 @@ public interface SessionStore {
 
     void save(@Nonnull SessionKey sessionKey, @Nonnull SessionSaveJob saveJob);
 
-    void load(@Nonnull SessionKey sessionKey, @Nonnull SessionAttributeSink sink);
+    boolean load(@Nonnull SessionKey sessionKey, @Nonnull SessionAttributeSink sink);
 
     void delete(@Nonnull SessionKey sessionKey);
 

@@ -25,19 +25,23 @@ class SessionSerde {
         log.trace("Attempting to serialize HTTP session {}", session.getId());
         serdeOperations.incrementAndGet();
         try {
-            sessionKeyResolver.getCurrentKey(session).ifPresent(key -> sessionStore.save(key,
-                    sink -> session.getAttributeNames().asIterator().forEachRemaining(
-                            name -> sink.write(name, session.getAttribute(name)))));
+            sessionKeyResolver.getCurrentKey(session).ifPresentOrElse(key -> sessionStore.save(key,
+                            sink -> session.getAttributeNames().asIterator().forEachRemaining(
+                                    name -> sink.write(name, session.getAttribute(name)))),
+                    () -> log.warn("Could not determine session key"));
         } finally {
             serdeOperations.decrementAndGet();
         }
     }
 
-    public void deserialize(@Nonnull HttpSession session) {
+    public boolean deserialize(@Nonnull HttpSession session) {
         log.trace("Attempting to deserialize HTTP session {}", session.getId());
         serdeOperations.incrementAndGet();
         try {
-            sessionKeyResolver.getCurrentKey(session).ifPresent(key -> sessionStore.load(key, session::setAttribute));
+            return sessionKeyResolver.getCurrentKey(session).map(key -> sessionStore.load(key, session::setAttribute)).orElseGet(() -> {
+                log.warn("Could not determine session key");
+                return false;
+            });
         } finally {
             serdeOperations.decrementAndGet();
         }
@@ -47,7 +51,7 @@ class SessionSerde {
         log.trace("Attempting to delete data for HTTP session {}", session.getId());
         serdeOperations.incrementAndGet();
         try {
-            sessionKeyResolver.getCurrentKey(session).ifPresent(sessionStore::delete);
+            sessionKeyResolver.getCurrentKey(session).ifPresentOrElse(sessionStore::delete, () -> log.warn("Could not determine session key"));
         } finally {
             serdeOperations.decrementAndGet();
         }
